@@ -35,6 +35,51 @@ class MySQL {
     }
 
     /**
+     * Boilerplate code for executing statements and fetching their result
+     * Should only be trusted for simple statements SELECT, UPDATE, INSERT, DELETE
+     * 
+     * @global MySQL $mysql
+     * @param type $query
+     * @param type $types
+     * @param type $values
+     * @return boolean
+     * @throws Exception
+     */
+    public function smart_stmt($query, $types, $values) {
+        global $mysql;
+
+        try {
+            $stmt = $mysql->prepare_statement($query);
+
+            //checking if query well written
+            if (!$stmt)
+                throw new Exception("Invalid Query: " . $query);
+
+            //binds the values
+            call_user_func_array(
+                    array($stmt, 'bind_param'), array_merge(
+                            array($types), $values
+                    )
+            );
+            $stmt->execute();
+
+            if (strpos($query, "SELECT") !== false)
+                $result = $stmt->get_result();
+            elseif (strpos($query, "INSERT") !== false)
+                $result = $mysql->inserted_id();
+            elseif (strpos($query, "UPDATE") !== false || strpos($query, "DELETE") !== false)
+                $result = true;
+            
+        } catch (Exception $ex) {
+            $result = false;
+        } finally {
+            if ($stmt != false)
+                $stmt->close();
+            return $result;
+        }
+    }
+
+    /**
      * Returns the auto-generated key after an insertion
      * 
      * @return type
