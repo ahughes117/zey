@@ -44,10 +44,15 @@ class User {
             $stmt->bind_param("ssss", $this->username, $this->password, $this->email, $this->uuid);
             $stmt->execute();
 
-            $stmt->close();
-            return $mysql->inserted_id();
+            if ($stmt->affected_rows != 1)
+                throw new Exception("Affected Rows: " . $stmt->affected_rows);
+
+            $result = $mysql->inserted_id();
         } catch (Exception $ex) {
-            return false;
+            $result = false;
+        } finally {
+            $stmt->close();
+            return $result;
         }
     }
 
@@ -93,10 +98,12 @@ class User {
             elseif ($num != 1)
                 throw new Exception("Wrong Credentials");
 
-            $stmt->close();
-            return true;
+            $result = true;
         } catch (Exception $ex) {
-            return false;
+            $result = false;
+        } finally {
+            $stmt->close();
+            return $result;
         }
     }
 
@@ -149,10 +156,12 @@ class User {
                 $u->email = $row['Email'];
                 $u->uuid = $row['UUID'];
             }
-            $stmt->close();
-            return $u;
+            $result = $u;
         } catch (Exception $ex) {
-            return false;
+            $result = false;
+        } finally {
+            $stmt->close();
+            return $result;
         }
     }
 
