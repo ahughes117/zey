@@ -30,31 +30,11 @@ class User {
             INSERT INTO user (Username, Password, Email, UUID, DateCreated) VALUES 
             (?, ?, ?, ?, CURRENT_TIMESTAMP) ";
 
-        try {
-            $stmt = $mysql->prepare_statement($query);
+        $types = "ssss";
+        $values = array(&$this->username, &$this->password, &$this->email, &$this->uuid);
 
-            //checking if query well written
-            if (!$stmt)
-                throw new Exception("Invalid Query: " . $query);
-
-            //checking if mandatory params are set
-            if ($this->username == null || $this->password == null || $this->uuid == null)
-                throw new Exception("Missing Params");
-
-            $stmt->bind_param("ssss", $this->username, $this->password, $this->email, $this->uuid);
-            $stmt->execute();
-
-            if ($stmt->affected_rows != 1)
-                throw new Exception("Affected Rows: " . $stmt->affected_rows);
-
-            $result = $mysql->inserted_id();
-        } catch (Exception $ex) {
-            $result = false;
-        } finally {
-            if ($stmt != false)
-                $stmt->close();
-            return $result;
-        }
+        $res = $mysql->smart_stmt($query, $types, $values);
+        return $res;
     }
 
     /**
@@ -75,38 +55,18 @@ class User {
             FROM user 
             WHERE Username = ? AND Password = ? ";
 
-        try {
-            $stmt = $mysql->prepare_statement($query);
+        $types = "ss";
+        $values = array(&$this->username, &$this->password);
 
-            //checking if query well written
-            if (!$stmt)
-                throw new Exception("Invalid Query: " . $query);
-
-            //checking if mandatory params are set
-            if ($this->username == null || $this->password == null)
-                throw new Exception("Missing Params");
-
-            $stmt->bind_param("ss", $this->username, $this->password);
-            $stmt->execute();
-
-            $res = $stmt->get_result();
-            while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
-                $num = $row['num'];
-            }
-
-            if ($num == -1)
-                throw new Exception("Something went wrong while processing the query");
-            elseif ($num != 1)
-                throw new Exception("Wrong Credentials");
-
-            $result = true;
-        } catch (Exception $ex) {
-            $result = false;
-        } finally {
-            if ($stmt != false)
-                $stmt->close();
-            return $result;
+        $res = $mysql->smart_stmt($query, $types, $values);
+        while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
+            $num = $row['num'];
         }
+
+        if ($num == 1)
+            return true;
+        else
+            return false;
     }
 
     /**
@@ -123,33 +83,28 @@ class User {
     public function fetch($param) {
         global $mysql;
 
-        if (strcmp($param, "id") == 0)
-            $whereS = "userID = ? ";
-        elseif (strcmp($param, "username") == 0)
-            $whereS = "Username = ? ";
-
         $query = "
             SELECT userID, Username, Email, UUID 
             FROM user 
             WHERE ";
 
-        try {
-            $stmt = $mysql->prepare_statement($query);
+        if (strcmp($param, "id") == 0) {
+            $whereS = "userID = ? ";
+            $types = "i";
+            $values = array(&$this->userID);
+        } elseif (strcmp($param, "username") == 0) {
+            $whereS = "Username = ? ";
+            $types = "s";
+            $values = array(&$this->username);
+        }
 
-            //checking if query is well written
-            if (!$stmt)
-                throw new Exception("Invalid Query: " . $query);
+        $query .= $whereS;
 
-            if (strcmp($param, "id") == 0)
-                $stmt->bind_param("i", $this->userID);
-            elseif (strcmp($param, "username") == 0)
-                $stmt->bind_param("s", $this->username);
-            else
-                throw new Exception("No parameter passed");
+        $res = $mysql->smart_stmt($query, $types, $values);
 
-            $stmt->execute();
-
-            $res = $stmt->get_result();
+        if (!$res) {
+            $result = false;
+        } else {
             while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
                 $u = new User();
 
@@ -159,13 +114,9 @@ class User {
                 $u->uuid = $row['UUID'];
             }
             $result = $u;
-        } catch (Exception $ex) {
-            $result = false;
-        } finally {
-            if ($stmt != false)
-                $stmt->close();
-            return $result;
         }
+
+        return $result;
     }
 
 }

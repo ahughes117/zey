@@ -29,31 +29,12 @@ class Token {
             INSERT INTO token (Token, UserUUID, SessionUUID, DateCreated) VALUES 
             (?, ?, ?, CURRENT_TIMESTAMP) ";
 
-        try {
-            $stmt = $mysql->prepare_statement($query);
+        $types = "sss";
+        $values = array($this->token, $this->user_uuid, $this->session_uuid);
 
-            //checking if query well written
-            if (!$stmt)
-                throw new Exception("Invalid Query: " . $query);
+        $res = $mysql->smart_stmt($query, $types, $values);
 
-            //checking if all mandatory params are set
-            if ($this->token == null || $this->user_uuid == null || $this->session_uuid == null)
-                throw new Exception("Missing Params");
-
-            $stmt->bind_param("sss", $this->token, $this->user_uuid, $this->session_uuid);
-            $stmt->execute();
-
-            if ($stmt->affected_rows != 1)
-                throw new Exception("Affected Rows: " . $stmt->affected_rows);
-
-            $result = $mysql->inserted_id();
-        } catch (Exception $ex) {
-            $result = false;
-        } finally {
-            if ($stmt != false)
-                $stmt->close();
-            return $result;
-        }
+        return $res;
     }
 
     /**
