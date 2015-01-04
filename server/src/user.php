@@ -3,7 +3,7 @@
 /**
  * The User Entity Class, all the user-oriented functionality
  */
-require_once ('db.php');
+require_once ('mysql.php');
 
 class User {
 
@@ -51,7 +51,8 @@ class User {
         } catch (Exception $ex) {
             $result = false;
         } finally {
-            $stmt->close();
+            if ($stmt != false)
+                $stmt->close();
             return $result;
         }
     }
@@ -102,7 +103,8 @@ class User {
         } catch (Exception $ex) {
             $result = false;
         } finally {
-            $stmt->close();
+            if ($stmt != false)
+                $stmt->close();
             return $result;
         }
     }
@@ -160,7 +162,8 @@ class User {
         } catch (Exception $ex) {
             $result = false;
         } finally {
-            $stmt->close();
+            if ($stmt != false)
+                $stmt->close();
             return $result;
         }
     }

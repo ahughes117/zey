@@ -3,7 +3,7 @@
 /**
  * The Token Entity Class, all the token-oriented functionality
  */
-require_once ('db.php');
+require_once ('mysql.php');
 
 class Token {
 
@@ -50,7 +50,8 @@ class Token {
         } catch (Exception $ex) {
             $result = false;
         } finally {
-            $stmt->close();
+            if ($stmt != false)
+                $stmt->close();
             return $result;
         }
     }
@@ -89,7 +90,8 @@ class Token {
         } catch (Exception $ex) {
             $result = false;
         } finally {
-            $stmt->close();
+            if ($stmt != false)
+                $stmt->close();
             return $result;
         }
     }
