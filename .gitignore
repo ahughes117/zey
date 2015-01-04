@@ -12,3 +12,5 @@
 hs_err_pid*
 /client/ZEYClient/nbproject/private/
 /server/nbproject/private/
+
+/server/config.php
