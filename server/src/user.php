@@ -48,10 +48,10 @@ class User {
      */
     public function authenticate() {
         global $mysql;
-        $num = -1;
+        $u = null;
 
         $query = "
-            SELECT COUNT(*) AS num 
+            SELECT Password 
             FROM user 
             WHERE Username = ? AND Password = ? ";
 
@@ -60,13 +60,15 @@ class User {
 
         $res = $mysql->smart_stmt($query, $types, $values);
         while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
-            $num = $row['num'];
+            $u = new User();
+            $u->password = $row['Password'];
         }
 
-        if ($num == 1)
-            return true;
-        else
-            return false;
+        if ($u == null) {
+            $auth = false;
+        } else {
+            $auth = Utils::password_verify($this->password, $u->password);
+        }
     }
 
     /**
